@@ -1,0 +1,36 @@
+@startuml
+title Safety assessment algorithm used for concept acceptance
+
+start
+:Define boundaries\n(existing coil machine vs coil mover cell);
+:List operating modes\n(Auto, Manual, Teach/Maintenance);
+:Identify hazards per module\n(robot, turntable, conveyors, lift, inspection);
+
+repeat
+:Score S,F,P,A;
+:R = S*F*P*A;
+if (R >= 128?) then (critical)
+  if (Safety function exists\nand reduces risk?) then (yes)
+    :Record function\n(E-stop, interlock, STO,\nsafe speed, restart control);
+  else (no)
+    :Result = NOT ACCEPTABLE;
+    stop
+  endif
+endif
+repeat while (More hazards?) is (yes)
+
+:Run gate checks\n(E-stop, interlocks,\nsafe speed, no restart,\nSTO, mode separation);
+
+if (Any gate check failed?) then (yes)
+  :Result = NOT ACCEPTABLE;
+  stop
+else (no)
+  :Score SRI pillars P1..P6;
+  if (SRI >= 21?) then (yes)
+    :Result = ACCEPTABLE;
+  else (no)
+    :Result = CONDITIONAL;
+  endif
+endif
+stop
+@enduml
