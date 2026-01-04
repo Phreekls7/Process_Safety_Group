@@ -1,0 +1,41 @@
+@startuml
+title Coil mover cell - system blueprint (context + flows)
+
+actor Operator
+
+rectangle "Coil winding machine\n(existing)" as Winder
+rectangle "Coil mover cell" as Cell {
+  rectangle "Circular manipulator\n(servo turntable)\ncartridge exchange" as Turn
+  rectangle "Robot arm + custom gripper" as Robot
+  rectangle "Inspection station\n(camera + digital caliper\n(+ laser profile option)" as Insp
+  rectangle "Box handling\n(double-decker conveyor\n+ lift + fixation\n+ box shelf)" as Box
+  rectangle "Main PLC + HMI" as PLC
+  rectangle "Safety system\n(E-stop chain, guarding,\ninterlocks, safe speed)" as Safety
+  rectangle "Reject bin" as Reject
+}
+
+' Material flow
+Winder --> Turn : full cartridge available
+Turn --> Winder : empty cartridge placed back
+Turn --> Robot : coils in cartridge
+Robot --> Insp : present coil for inspection
+Insp --> Robot : OK / NOK + defect code
+Robot --> Box : place OK coil\ninto fixed pocket
+Robot --> Reject : place NOK coil
+
+Box --> Operator : full boxes to remove
+Reject --> Operator : NOK coils for evaluation
+
+' Control links
+Operator --> PLC : run/stop, mode,\nrecipe, alarms
+PLC .. Robot : start job + status
+PLC .. Insp : trigger + result
+PLC .. Turn : index 180° + confirm
+PLC .. Box : conveyors, lift, clamps
+
+' Safety links
+Safety .. PLC : safety healthy / tripped
+Safety .. Robot : safe stop / enable\nsafe speed in teach
+Safety .. Box : stop drives (STO)
+
+@enduml
