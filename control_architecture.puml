@@ -1,0 +1,44 @@
+@startuml
+title Coil mover cell - control architecture
+
+skinparam componentStyle rectangle
+
+actor Operator
+
+component "HMI" as HMI
+component "Main PLC\n(process sequencing)" as PLC
+component "Robot controller\n(motion programs)" as RC
+component "Inspection PC\n(model + measurement)" as IPC
+component "I/O modules\n(sensors + actuators)" as IO
+
+component "Turntable drive\n(circular manipulator)" as TurnDrive
+component "Conveyor + lift drives\n(box handling)" as BoxDrives
+component "Coil machine\n(existing)" as Winder
+component "Mechanical reset actuator\n(on coil machine sensor)" as Trick
+
+component "Safety PLC / safety relays" as Safety
+component "Safety devices\nE-stops, doors, guards" as Safedev
+
+Operator --> HMI : commands + acknowledgements
+HMI --> PLC : run/stop, mode,\nrecipe, reset alarms
+
+PLC --> RC : start job, target IDs
+RC --> PLC : ready/busy/done\nfault code
+
+PLC --> IPC : trigger scan\nrecipe ID
+IPC --> PLC : OK/NOK\nquality/timeout\ncode
+
+PLC --> IO : field I/O
+
+IO --> TurnDrive : index + enable
+IO --> BoxDrives : conveyor/lift/clamp
+IO --> Trick : push/reset action
+Winder --> IO : full cartridge signal\n(optional simple I/O)
+
+Safedev --> Safety : safe inputs
+Safety --> RC : safe stop/enable\nsafe speed
+Safety --> TurnDrive : STO / safe stop
+Safety --> BoxDrives : STO / safe stop
+Safety --> PLC : safety status\nreset required
+
+@enduml
