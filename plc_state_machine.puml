@@ -1,0 +1,52 @@
+@startuml
+title Main PLC - high-level state machine
+
+[*] --> Safe_Stopped
+
+state Safe_Stopped
+note right of Safe_Stopped
+Entry conditions:
+- safety not healthy
+- E-stop pressed
+- guard open
+end note
+
+Safe_Stopped --> Idle : safety healthy\nand reset done
+
+Idle --> Wait_Full_Cartridge : Auto start
+Wait_Full_Cartridge --> Exchange_Cartridge : full cartridge signal
+
+Exchange_Cartridge --> Pick_Coil : turntable indexed\nand confirmed
+
+Pick_Coil --> Inspect_Coil : coil picked\nand part-present OK
+Inspect_Coil --> Place_OK : result OK
+Inspect_Coil --> Place_NOK : result NOK
+Inspect_Coil --> Fault : timeout / invalid result
+
+Place_OK --> Update_Counts
+Place_NOK --> Update_Counts
+
+Update_Counts --> Box_Management : update counters\n(box fill, scrap)
+Box_Management --> Pick_Coil : box ready
+Box_Management --> Wait_Box_Change : box full / no box
+
+Wait_Box_Change --> Box_Management : operator loaded box\nand confirmed
+
+Fault --> Idle : operator ack\nand recovery done
+
+state "Safety Trip" as Trip
+Idle --> Trip
+Wait_Full_Cartridge --> Trip
+Exchange_Cartridge --> Trip
+Pick_Coil --> Trip
+Inspect_Coil --> Trip
+Place_OK --> Trip
+Place_NOK --> Trip
+Update_Counts --> Trip
+Box_Management --> Trip
+Wait_Box_Change --> Trip
+Fault --> Trip
+
+Trip --> Safe_Stopped
+
+@enduml
