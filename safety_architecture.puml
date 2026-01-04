@@ -1,0 +1,26 @@
+@startuml
+title Safety architecture - independent stop of hazards
+
+skinparam componentStyle rectangle
+
+component "Safety devices\nE-stops, guard switches" as Inp
+component "Safety PLC / safety relays" as Safety
+
+component "Robot controller\nsafe inputs" as RobotSafe
+component "Turntable drive\nSTO input" as TurnSTO
+component "Conveyor + lift drives\nSTO input" as BoxSTO
+component "Main PLC\n(process control)" as PLC
+component "HMI" as HMI
+
+Inp --> Safety : safe signals
+
+Safety --> RobotSafe : safe stop / enable\nsafe speed
+Safety --> TurnSTO : STO
+Safety --> BoxSTO : STO
+Safety --> PLC : safety status\nreset required
+
+PLC --> HMI : safety alarm\ninstructions
+HMI --> PLC : operator reset request
+PLC --> Safety : reset command\n(if conditions met)
+
+@enduml
